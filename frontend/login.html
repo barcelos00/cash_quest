@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acesso - Cash Quest</title>
+    <link rel="icon" type="image/logo.png" href="imagens/logo.png">
+    <link rel="stylesheet" href="login.css">
+</head>
+
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <h2>Cash Quest</h2>
+            <p>Gerencie suas finanças</p>
+        </div>
+        <div class="abas-container">
+            <button class="aba-btn ativa" onclick="mudarAba('login')">Entrar</button>
+            <button class="aba-btn" onclick="mudarAba('cadastro')">Cadastrar</button>
+        </div>
+        <div id="aba-login" class="conteudo-aba ativa">
+            <form id="formLogin">
+                <input type="hidden" name="acao" value="login">
+                <div class="field-group">
+                    <input type="text" name="usuario" placeholder="Nome de Usuário" required>
+                </div>
+                <div class="field-group">
+                    <input type="password" name="senha" placeholder="Senha" required>
+                </div>
+                <button type="submit" id="btnLogin">Entrar no Sistema</button>
+            </form>
+        </div>
+        <div id="aba-cadastro" class="conteudo-aba">
+            <form id="formCadastro">
+                <input type="hidden" name="acao" value="registrar">
+                <div class="field-group">
+                    <input type="text" name="usuario" placeholder="Escolha um Usuário" required>
+                </div>
+                <div class="field-group">
+                    <input type="password" name="senha" placeholder="Crie uma Senha" required>
+                </div>
+                <button type="submit" id="btnRegistrar">Finalizar Cadastro</button>
+            </form>
+        </div>
+        <div id="mensagem" class="msg"></div>
+    </div>
+
+    <script>
+        function mudarAba(abaSelecionada) {
+            document.querySelectorAll('.aba-btn').forEach(btn => btn.classList.remove('ativa'));
+            document.querySelectorAll('.conteudo-aba').forEach(conteudo => conteudo.classList.remove('ativa'));
+            document.getElementById('mensagem').innerText = '';
+
+            if (abaSelecionada === 'login') {
+                document.querySelectorAll('.aba-btn')[0].classList.add('ativa');
+                document.getElementById('aba-login').classList.add('ativa');
+            } else {
+                document.querySelectorAll('.aba-btn')[1].classList.add('ativa');
+                document.getElementById('aba-cadastro').classList.add('ativa');
+            }
+        }
+
+        async function enviarRequisicao(evento, formulario, idBotao, textoBotao, msgSucesso, redirecionar) {
+            evento.preventDefault();
+            const formData = new FormData(formulario);
+            const btn = document.getElementById(idBotao);
+            const msgDiv = document.getElementById('mensagem');
+
+            btn.disabled = true;
+            btn.innerText = "Aguarde...";
+
+            try {
+                const res = await fetch('../backend/auth.php', {method: 'POST', body: formData});
+                const data = await res.json();
+
+                if (data.sucesso) {
+                    msgDiv.style.color = 'var(--success)';
+                    msgDiv.innerText = msgSucesso;
+                    setTimeout(() => {
+                        if (redirecionar) {window.location.href = 'index.html';}
+                        else {formulario.reset(); mudarAba('login');}
+                    }, 1000);
+                } else {
+                    msgDiv.style.color = 'var(--danger)';
+                    msgDiv.innerText = data.msg;
+                }
+            } catch (error) {
+                msgDiv.style.color = 'var(--danger)';
+                msgDiv.innerText = "Erro de conexão.";
+            } finally {
+                btn.disabled = false;
+                btn.innerText = textoBotao;
+            }
+        }
+
+        document.getElementById('formLogin').addEventListener('submit', (e) => {
+            enviarRequisicao(e, e.target, 'btnLogin', 'Entrar no Sistema', 'Usuário confirmado! Entrando...', true);
+        });
+        document.getElementById('formCadastro').addEventListener('submit', (e) => {
+            enviarRequisicao(e, e.target, 'btnRegistrar', 'Finalizar Cadastro', 'Conta criada! Faça login.', false);
+        });
+    </script>
+</body>
+
+</html>
