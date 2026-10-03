@@ -16,9 +16,10 @@ jobs:
     - name: 📂 Sync files to InfinityFree
       uses: SamKirkland/FTP-Deploy-Action@v4.3.5
       with:
-        server: ${{ secrets.FTP_SERVER }}
+        server: ftpupload.net
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
+
         local-dir: ./                  # Envia tudo o que está na raiz do repositório
         server-dir: ./htdocs/          # Envia direto para a pasta pública do InfinityFree
         dangerous-clean-slate: false   # Mantém arquivos extras que já estejam no servidor
