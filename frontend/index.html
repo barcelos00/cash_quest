@@ -1,18 +1,15 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - Cash Quest</title>
-    <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Cash Quest</title>
     
-    <!-- Adicione esta linha: -->
     <link rel="icon" type="image/png" href="imagens/logo.png">   
     <link rel="stylesheet" href="style.css">
+    
+    <!-- Importação do Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
@@ -31,6 +28,26 @@
             <div><span>Saldo Atual</span><strong id="displaySaldo">R$ 0,00</strong></div>
             <div><span>Entradas</span><strong id="displayReceitas" style="color: var(--success);">R$ 0,00</strong></div>
             <div><span>Saídas</span><strong id="displayDespesas" style="color: var(--danger);">R$ 0,00</strong></div>
+        </section>
+
+      <!-- Sessão de Gráficos (3 Colunas) -->
+        <section class="insights-section" style="margin-bottom: 24px; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;">
+            
+            <div class="budget-card" style="text-align: center;">
+                <h3>Proporção</h3>
+                <canvas id="graficoPizza"></canvas>
+            </div>
+            
+            <div class="budget-card" style="text-align: center;">
+                <h3>Comparativo</h3>
+                <canvas id="graficoBarras"></canvas>
+            </div>
+            
+            <div class="budget-card" style="text-align: center;">
+                <h3>Evolução do Saldo</h3>
+                <canvas id="graficoLinha"></canvas>
+            </div>
+
         </section>
 
         <section class="controls">
