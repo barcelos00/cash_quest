@@ -255,23 +255,60 @@ tbody td {
     pointer-events: none;
 }
 
-@media (max-width: 900px) {
-    .controls {
-        grid-template-columns: 1fr;
-    }
-}
-
-@media (max-width: 680px) {
+/* ==========================================
+   RESPONSIVIDADE (MOBILE & TABLET) - CORRIGIDA
+   ========================================== */
+@media (max-width: 768px) {
     .app-shell {
         padding: 16px;
     }
 
     .hero {
-        grid-template-columns: 1fr;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
         text-align: center;
+        display: flex;
+    }
+
+    .header-actions {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch !important;
+    }
+
+    .header-actions input, 
+    .header-actions button {
+        width: 100%;
     }
 
     .summary-card {
         grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .controls {
+        grid-template-columns: 1fr;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .transaction-form, 
+    .filters-card {
+        width: 100%;
+    }
+
+    .insights-section {
+        grid-template-columns: 1fr !important; 
+    }
+
+    .table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 10px;
+    }
+    
+    table {
+        min-width: 500px;
     }
 }
