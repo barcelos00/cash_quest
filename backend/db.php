@@ -1,5 +1,5 @@
 <?php
-$host = 'COPIE_DO_PAINEL_INFINITYFREE'; // Ex: sql305.infinityfree.com
+$host = 'sql306.infinityfree.com';
 $dbname = 'if0_43107147_cashquest'; // O seu Database Name real
 $user = 'if0_43107147'; // O seu User Name real
 $pass = 'o1K0AEl13t'; // Sua senha (esta já está correta)
