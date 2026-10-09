@@ -1,4 +1,5 @@
 <?php
+session_start(); // Esta linha é obrigatória para recuperar o login do utilizador
 require 'db.php';
 header('Content-Type: application/json');
 
