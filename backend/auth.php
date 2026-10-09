@@ -19,7 +19,7 @@ if ($acao === 'registrar') {
     }
 } elseif ($acao === 'login') {
     $stmt = $pdo->prepare("SELECT id, senha FROM usuarios WHERE usuario = ?");
-    $stmt->execute([$usuario]);
+    $stmt->execute([$nome]);
     $user = $stmt->fetch();
     
     if ($user && password_verify($senha, $user['senha'])) {
