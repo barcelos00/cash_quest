@@ -2,7 +2,7 @@
 $host = 'sql306.infinityfree.com';
 $dbname = 'if0_43107147_cashquest'; // O seu Database Name real
 $user = 'if0_43107147'; // O seu User Name real
-$pass = 'o1K0AEl13t'; // Sua senha (esta já está correta)
+$pass = 'o1KOAElI3t'; // Sua senha (esta já está correta)
 
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname", $user, $pass);
