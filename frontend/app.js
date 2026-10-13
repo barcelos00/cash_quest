@@ -1,77 +1,240 @@
-// Variáveis globais para controlar os 3 gráficos
-let chartPizza = null;
-let chartBarras = null;
-let chartLinha = null;
 
-function mostrarToast(mensagem, tipo = 'success') {
-    const toast = document.getElementById('toast');
-    const msg = document.getElementById('toastMsg');
-    toast.className = 'toast'; 
-    toast.classList.add(tipo);
-    msg.innerText = mensagem;
-    toast.classList.remove('hidden');
-    setTimeout(() => toast.classList.add('hidden'), 3000);
-}
+// SEGURANÇA: Impede a visualização do cache se o utilizador usar o botão "Voltar" após o logout
+window.addEventListener('pageshow', (event) => {
+    if (event.persisted) {
+        window.location.reload(); 
+    }
+});
+
+// Variáveis globais para os gráficos
+let meuGraficoComparativo = null;
+let meuGraficoEvolucao = null;
+
+document.addEventListener("DOMContentLoaded", () => {
+    const filtroMes = document.getElementById('filtroMes');
+    const dataRegistroInput = document.getElementById('data_registro');
+    
+    // Configura datas iniciais
+    const hoje = new Date();
+    filtroMes.value = hoje.toISOString().slice(0, 7); 
+    dataRegistroInput.value = hoje.toISOString().slice(0, 10); 
+
+    carregarTransacoes();
+    filtroMes.addEventListener('change', carregarTransacoes);
+
+    // MÁGICA DO PARCELAMENTO
+    const metodoPagamento = document.getElementById('metodo_pagamento');
+    const parcelasInput = document.getElementById('parcelas');
+
+    metodoPagamento.addEventListener('change', (e) => {
+        if (e.target.value === 'cartao') {
+            parcelasInput.style.display = 'block';
+            parcelasInput.required = true;
+        } else {
+            parcelasInput.style.display = 'none';
+            parcelasInput.required = false;
+        }
+    });
+});
 
 async function carregarTransacoes() {
-    const res = await fetch('../backend/api.php');
-    const data = await res.json();
-
-    if (data.erro === 'nao_autenticado') {
-        window.location.href = 'login.html';
-        return;
-    }
-
-    const tbody = document.getElementById('tabelaTransacoes');
-    tbody.innerHTML = '';
+    const mesSelecionado = document.getElementById('filtroMes').value;
     
-    let saldo = 0, totalReceitas = 0, totalDespesas = 0;
-
-    data.forEach(t => {
-        const valorNum = parseFloat(t.valor);
-        if (t.tipo === 'receita') {
-            saldo += valorNum; totalReceitas += valorNum;
-        } else {
-            saldo -= valorNum; totalDespesas += valorNum;
+    try {
+        // Busca os dados ao PHP com ordem para ignorar cache antigo
+        const resposta = await fetch(`../backend/api.php?mes=${mesSelecionado}`, { cache: 'no-store' });
+        
+        // MODO DETETIVE: Lê o que o PHP enviou como texto puro primeiro
+        const textoResposta = await resposta.text();
+        let dados;
+        
+        try {
+            // Tenta converter para JSON. Se o PHP enviou um erro em HTML, isto vai falhar
+            dados = JSON.parse(textoResposta);
+        } catch (erroConversao) {
+            alert("Erro vindo do PHP (Possível erro no servidor):\n" + textoResposta);
+            return;
         }
 
-        const tipoClasse = t.tipo === 'receita' ? 'type-income' : 'type-expense';
-        const tipoTexto = t.tipo === 'receita' ? 'Entrada' : 'Saída';
-        const dataFormatada = t.data_registro ? new Date(t.data_registro).toLocaleDateString('pt-BR') : '-';
+        if (dados.erro === "nao_autenticado") {
+            window.location.href = "login.html";
+            return;
+        }
 
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td>${t.descricao}</td>
-            <td class="${tipoClasse}">R$ ${valorNum.toFixed(2).replace('.', ',')}</td>
-            <td>${tipoTexto}</td>
-            <td style="color: var(--muted);">${dataFormatada}</td>
-        `;
-        tbody.appendChild(tr);
-    });
+        const saldoAnterior = dados.saldo_anterior || 0;
+        const transacoesDoMes = dados.transacoes || [];
 
-    document.getElementById('displaySaldo').innerText = `R$ ${saldo.toFixed(2).replace('.', ',')}`;
-    document.getElementById('displayReceitas').innerText = `R$ ${totalReceitas.toFixed(2).replace('.', ',')}`;
-    document.getElementById('displayDespesas').innerText = `R$ ${totalDespesas.toFixed(2).replace('.', ',')}`;
+        let totalReceitasMes = 0;
+        let totalDespesasMes = 0;
 
-    atualizarGraficos(data, totalReceitas, totalDespesas);
+        const lista = document.getElementById('listaTransacoes');
+        lista.innerHTML = ''; 
+
+        // SALDO DO MÊS ANTERIOR 
+        if (saldoAnterior !== 0) {
+            const classeCor = saldoAnterior >= 0 ? 'positivo' : 'negativo';
+            lista.innerHTML += `
+                <div class="transacao-item saldo-transportado" style="background: var(--surface-solid); border-left: 4px solid var(--primary);">
+                    <span><strong>Saldo do mês anterior</strong></span>
+                    <span class="${classeCor}"><strong>R$ ${saldoAnterior.toFixed(2)}</strong></span>
+                </div>
+            `;
+        }
+
+        const transacoesAscendentes = [...transacoesDoMes].reverse(); 
+        let saldoAcumulado = saldoAnterior;
+        const labelsEvolucao = ['Início'];
+        const dataEvolucao = [saldoAnterior];
+
+        transacoesDoMes.forEach((t) => {
+            const valor = parseFloat(t.valor);
+            
+            if (t.tipo === 'receita') {
+                totalReceitasMes += valor;
+            } else {
+                totalDespesasMes += valor;
+            }
+
+            const dataFormatada = t.data_registro;
+
+            lista.innerHTML += `
+                <div class="transacao-item">
+                    <div class="info">
+                        <span class="descricao">${t.descricao}</span>
+                        <span class="data" style="font-size: 0.8em; color: var(--muted); display: block;">${dataFormatada}</span>
+                    </div>
+                    <div class="acoes-transacao">
+                        <span class="${t.tipo === 'receita' ? 'positivo' : 'negativo'}">
+                            ${t.tipo === 'receita' ? '+' : '-'} R$ ${valor.toFixed(2)}
+                        </span>
+                        <button onclick="deletarTransacao(${t.id})" class="btn-remover" title="Apagar transação">X</button>
+                    </div>
+                </div>
+            `;
+        });
+
+        transacoesAscendentes.forEach((t, index) => {
+            const valor = parseFloat(t.valor);
+            if (t.tipo === 'receita') saldoAcumulado += valor;
+            else saldoAcumulado -= valor;
+            
+            labelsEvolucao.push(`Mov ${index + 1}`);
+            dataEvolucao.push(saldoAcumulado);
+        });
+
+        const saldoAtual = saldoAnterior + totalReceitasMes - totalDespesasMes;
+
+        document.getElementById('saldoDisplay').innerText = `R$ ${saldoAtual.toFixed(2)}`;
+        document.getElementById('receitasDisplay').innerText = `R$ ${totalReceitasMes.toFixed(2)}`;
+        document.getElementById('despesasDisplay').innerText = `R$ ${totalDespesasMes.toFixed(2)}`;
+
+        desenharGraficos(totalReceitasMes, totalDespesasMes, labelsEvolucao, dataEvolucao);
+
+    } catch (error) {
+        alert("Erro grave de ligação ao servidor: " + error.message);
+    }
 }
 
-document.getElementById('formTransacao').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const formData = new FormData(e.target);
+function desenharGraficos(receitas, despesas, labelsEvolucao, dataEvolucao) {
+    if(meuGraficoComparativo) meuGraficoComparativo.destroy();
+    if(meuGraficoEvolucao) meuGraficoEvolucao.destroy();
+
+    const ctxComp = document.getElementById('graficoComparativo').getContext('2d');
+    meuGraficoComparativo = new Chart(ctxComp, {
+        type: 'bar',
+        data: {
+            labels: ['Movimentações Totais'],
+            datasets: [
+                { label: 'Entradas', data: [receitas], backgroundColor: '#22c55e' },
+                { label: 'Saídas', data: [despesas], backgroundColor: '#ef4444' }
+            ]
+        },
+        options: { responsive: true, plugins: { legend: { labels: { color: '#fff' } } }, scales: { y: { ticks: { color: '#aaa' } }, x: { ticks: { color: '#aaa' } } } }
+    });
+
+    const ctxEvol = document.getElementById('graficoEvolucao').getContext('2d');
+    meuGraficoEvolucao = new Chart(ctxEvol, {
+        type: 'line',
+        data: {
+            labels: labelsEvolucao,
+            datasets: [{
+                label: 'Evolução do Saldo',
+                data: dataEvolucao,
+                borderColor: '#6366f1',
+                backgroundColor: 'rgba(99, 102, 241, 0.2)',
+                fill: true,
+                tension: 0.1,
+                pointStyle: 'triangle',
+                pointBackgroundColor: '#22c55e',
+                pointRadius: 6
+            }]
+        },
+        options: { responsive: true, plugins: { legend: { labels: { color: '#fff' } } }, scales: { y: { ticks: { color: '#aaa' } }, x: { ticks: { color: '#aaa' } } } }
+    });
+}
+
+async function deletarTransacao(id) {
+    if (!confirm("Tem certeza que deseja apagar esta transação? Esta ação não pode ser desfeita.")) return;
+    
+    const formData = new FormData();
+    formData.append('acao', 'deletar');
+    formData.append('id', id);
 
     try {
-        const res = await fetch('../backend/api.php', { method: 'POST', body: formData });
-        const data = await res.json();
-        if (data.sucesso) {
-            e.target.reset(); 
-            carregarTransacoes(); 
-            mostrarToast("Transação adicionada com sucesso!", "success");
-        } else {
-            mostrarToast("Erro ao salvar transação.", "error");
+        const resposta = await fetch('../backend/api.php', { method: 'POST', body: formData });
+        const resultado = await resposta.json();
+        if (resultado.sucesso) carregarTransacoes(); 
+    } catch (error) { alert("Erro ao tentar apagar a transação."); }
+}
+
+document.getElementById('form-transacao').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const descricao = document.getElementById('descricao').value;
+    const valor = document.getElementById('valor').value;
+    const tipo = document.getElementById('tipo').value;
+    const metodo_pagamento = document.getElementById('metodo_pagamento').value;
+    const parcelas = document.getElementById('parcelas').value;
+    
+    // Captura a data selecionada no calendário e adiciona a hora atual
+    const data_registro = document.getElementById('data_registro').value;
+    const horaAtual = new Date().toTimeString().slice(0, 8); 
+
+    const formData = new FormData();
+    formData.append('descricao', descricao);
+    formData.append('valor', valor);
+    formData.append('tipo', tipo);
+    
+    // Só envia as parcelas se for cartão
+    if (metodo_pagamento === 'cartao') {
+        formData.append('parcelas', parcelas);
+    }
+    
+    // Junta a data escolhida com a hora atual (AAAA-MM-DD HH:MM:SS)
+    formData.append('data_registro', data_registro + ' ' + horaAtual); 
+
+    try {
+        const resposta = await fetch('../backend/api.php', { method: 'POST', body: formData });
+        const textoResposta = await resposta.text();
+        
+        let resultado;
+        try {
+            resultado = JSON.parse(textoResposta);
+        } catch(e) {
+            alert("Erro do PHP ao salvar:\n" + textoResposta);
+            return;
         }
-    } catch (error) {
-        mostrarToast("Erro de conexão.", "error");
+
+        if (resultado.erro === "nao_autenticado") {
+            window.location.href = "login.html";
+        } else if (resultado.erro) {
+            alert("Não foi possível salvar: " + resultado.erro);
+        } else if (resultado.sucesso) {
+            document.getElementById('descricao').value = '';
+            document.getElementById('valor').value = '';
+            carregarTransacoes();
+        }
+    } catch (error) { 
+        alert("Erro na comunicação com o servidor. Verifique o XAMPP."); 
     }
 });
 
@@ -81,105 +244,3 @@ document.getElementById('btnSair').addEventListener('click', async () => {
     await fetch('../backend/auth.php', { method: 'POST', body: formData });
     window.location.href = 'login.html';
 });
-
-// Função para gerar os 3 gráficos
-function atualizarGraficos(transacoes, receitas, despesas) {
-    // Destrói os gráficos antigos se eles já existirem (para não sobrepor)
-    if (chartPizza) chartPizza.destroy();
-    if (chartBarras) chartBarras.destroy();
-    if (chartLinha) chartLinha.destroy();
-
-    // Se não tiver transações, não desenha nada
-    if (receitas === 0 && despesas === 0) return;
-
-    // ==========================================
-    // 1. GRÁFICO DE PIZZA
-    // ==========================================
-    const ctxPizza = document.getElementById('graficoPizza');
-    if (ctxPizza) {
-        chartPizza = new Chart(ctxPizza, {
-            type: 'pie',
-            data: {
-                labels: ['Entradas', 'Saídas'],
-                datasets: [{
-                    data: [receitas, despesas],
-                    backgroundColor: ['#22c55e', '#ef4444'], // Verde e Vermelho
-                    borderWidth: 0
-                }]
-            },
-            options: { plugins: { legend: { labels: { color: '#f8fafc' } } } }
-        });
-    }
-
-    // ==========================================
-    // 2. GRÁFICO DE BARRAS
-    // ==========================================
-    const ctxBarras = document.getElementById('graficoBarras');
-    if (ctxBarras) {
-        chartBarras = new Chart(ctxBarras, {
-            type: 'bar',
-            data: {
-                labels: ['Movimentações Totais'],
-                datasets: [
-                    { label: 'Entradas', data: [receitas], backgroundColor: '#22c55e', borderRadius: 6 },
-                    { label: 'Saídas', data: [despesas], backgroundColor: '#ef4444', borderRadius: 6 }
-                ]
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148,163,184,0.1)' } },
-                    x: { ticks: { color: '#94a3b8' }, grid: { display: false } }
-                },
-                plugins: { legend: { labels: { color: '#f8fafc' } } }
-            }
-        });
-    }
-
-    // ==========================================
-    // 3. GRÁFICO DE LINHA (Tendência / Evolução)
-    // ==========================================
-    const historico = [...transacoes].reverse(); 
-    let saldoAcumulado = 0;
-    const labelsEvolucao = [];
-    const dadosEvolucao = [];
-
-    historico.forEach((t, index) => {
-        const valor = parseFloat(t.valor);
-        saldoAcumulado += t.tipo === 'receita' ? valor : -valor;
-        labelsEvolucao.push(`Mov ${index + 1}`);
-        dadosEvolucao.push(saldoAcumulado);
-    });
-
-    const ctxLinha = document.getElementById('graficoLinha');
-    if (ctxLinha) {
-        chartLinha = new Chart(ctxLinha, {
-            type: 'line',
-            data: {
-                labels: labelsEvolucao,
-                datasets: [{
-                    label: 'Evolução do Saldo',
-                    data: dadosEvolucao,
-                    borderColor: '#6366f1', // Azul roxeado do tema
-                    backgroundColor: 'rgba(99, 102, 241, 0.2)', // Fundo transparente
-                    fill: true,
-                    tension: 0.4, // Curva suave
-                    pointStyle: 'triangle', // Setas
-                    pointRadius: 6,
-                    pointBackgroundColor: '#22c55e'
-                }]
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148,163,184,0.1)' } },
-                    x: { ticks: { color: '#94a3b8' }, grid: { display: false } }
-                },
-                plugins: { legend: { labels: { color: '#f8fafc' } } }
-            }
-        });
-    }
-}
-
-// Inicializa o sistema ao carregar a página
-carregarTransacoes();

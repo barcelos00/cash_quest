@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cash Quest - Criar Conta</title>
+    <link rel="stylesheet" href="login.css">
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <h2>Criar Conta</h2>
+            <p>Comece a gerir as suas finanças hoje</p>
+        </div>
+
+        <form id="form-cadastro">
+            <div class="field-group">
+                <!-- Alterado de name="nome" para name="usuario" para corresponder ao auth.php -->
+                <input type="text" name="usuario" placeholder="Nome de Usuário" required>
+            </div>
+            <div class="field-group">
+                <input type="password" name="senha" placeholder="Palavra-passe" required>
+            </div>
+            
+            <button type="submit">Registar</button>
+            
+            <a href="index.html" class="btn-voltar">Voltar ao Início</a>
+
+            <div style="text-align: center; margin-top: 16px;">
+                <a href="login.html" style="color: var(--primary); text-decoration: none; font-size: 0.9rem;">Já tem conta? Faça login</a>
+            </div>
+        </form>
+        <div id="msg" class="msg"></div>
+    </div>
+
+    <script src="auth.js"></script>
+</body>
+</html>

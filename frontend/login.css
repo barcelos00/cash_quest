@@ -147,10 +147,56 @@ button[type="submit"]:disabled {
     font-size: 0.9rem;
     font-weight: 500;
 }
+/* Botão Voltar alinhado com o design do sistema */
+.btn-voltar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 8px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--surface-solid);
+    color: var(--text);
+    font-size: 1rem;
+    font-weight: 600;
+    font-family: inherit;
+    text-decoration: none;
+    margin-top: 12px;
+    transition: var(--transition);
+}
 
-/* ==========================================
+.btn-voltar:hover {
+    background: var(--surface);
+    border-color: var(--border-hover);
+    filter: brightness(1.1);
+}
+/* Estilo melhorado para o botão de Voltar */
+.btn-voltar {
+    display: block; /* Ocupa toda a largura para alinhar com os inputs */
+    width: 100%;
+    padding: 12px;
+    margin-top: 16px; /* Espaçamento superior */
+    text-align: center;
+    text-decoration: none;
+    background: var(--bg-bottom); /* Fundo mais escuro (preto azulado) */
+    color: var(--muted); /* Cor do texto secundária */
+    border: 1px solid var(--border); /* Borda subtil definida nas suas variáveis */
+    border-radius: var(--radius-md); /* Cantos arredondados */
+    font-weight: 600;
+    transition: all var(--transition); /* Transição suave para o hover */
+    box-sizing: border-box; /* Garante que padding não aumenta o tamanho */
+}
+
+.btn-voltar:hover {
+    background: var(--surface-hover); /* Fundo ligeiramente mais claro ao passar o rato */
+    color: var(--text); /* Texto fica branco */
+    border-color: var(--border-hover); /* Borda fica mais visível */
+    transform: translateY(-1px); /* Pequeno efeito de elevação */
+}
+/* 
    RESPONSIVIDADE LOGIN (MOBILE)
-   ========================================== */
+    */
 @media (max-width: 480px) {
     .login-container {
         padding: 24px; /* Diminui o respiro interno em telas muito pequenas */
