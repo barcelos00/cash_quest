@@ -1,17 +1,17 @@
-backend/config.php
-.env
+# backend/config.php
+# .env
 
 
-node_modules/
-vendor/
+# node_modules/
+# vendor/
 
 
-.DS_Store
-Thumbs.db
-desktop.ini
-.vscode/
-.idea/
+# .DS_Store
+# Thumbs.db
+# desktop.ini
+# .vscode/
+# .idea/
 
 
-*.log
-.cache/
+# *.log
+# .cache/
