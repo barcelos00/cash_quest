@@ -1,24 +1,24 @@
 # Cash Quest - Controle Financeiro Inteligente
 
-> Uma aplicação web moderna e segura para a gestão de finanças pessoais, desenvolvida com foco em performance, design limpo e automação de cálculos financeiros.
+Uma aplicação web moderna e segura para a gestão de finanças pessoais, desenvolvida com foco em performance, design limpo e automação de cálculos financeiros.
 
----
 
-## 🚀 Sobre o Projeto
+
+##  Sobre o Projeto
 O **Cash Quest** foi criado para ajudar os utilizadores a dominar as suas finanças de forma simples e intuitiva. A plataforma permite o registo de receitas e despesas mensais, planeamento de compras parceladas no cartão de crédito, visualização de gráficos dinâmicos de evolução de património e controlo seguro de sessões por utilizador.
 
----
 
-## 🛠️ Tecnologias Utilizadas
+
+## Tecnologias Utilizadas
 
 * **Frontend:** HTML5, CSS3 (com Design System baseado em variáveis e suporte a modo escuro) e JavaScript (Fetch API).
 * **Gráficos e Visualização:** Chart.js para renderização de comparativos de entradas/saídas e linhas de evolução de saldo.
 * **Backend:** PHP (com arquitetura orientada a serviços e PDO para segurança em base de dados).
 * **Base de Dados:** MySQL.
 
----
 
-## ✨ Principais Funcionalidades
+
+## Principais Funcionalidades
 
 1. **Dashboard Financeiro Completo:**
    * Filtro por mês de referência com cálculo automático do saldo transportado do mês anterior.
@@ -37,9 +37,9 @@ O **Cash Quest** foi criado para ajudar os utilizadores a dominar as suas finan�
    * Controlo de sessões com temporizador de inatividade automática (30 minutos).
    * Proteção contra visualização de dados via cache após o encerramento de sessão (botão "Voltar" do navegador blindado).
 
----
 
-## 📂 Estrutura do Projeto
+
+## Estrutura do Projeto
 
 ```text
 /
@@ -58,7 +58,7 @@ O **Cash Quest** foi criado para ajudar os utilizadores a dominar as suas finan�
 └── README.md          # Documentação do projeto
 
 
-⚙️ Como Executar Localmente
+ Como Executar Localmente
 Certifique-se de ter um ambiente local PHP/MySQL a funcionar (como o XAMPP).
 
 Clone ou coloque a pasta do projeto no diretório do seu servidor local (ex: htdocs/cash-quest).
